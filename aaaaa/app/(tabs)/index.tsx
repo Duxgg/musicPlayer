@@ -29,9 +29,9 @@ export default function TabOneScreen() {
   const [search, setSearch] = useState("");
 
   const [track, setTracks] = useState<Track[]>();
-  const searchSong = useMemo(async () => {
+  useMemo(async () => {
     if (!search) return null;
-
+    //try...
     const response = await fetch(
       `https://api.spotify.com/v1/search?q=${encodeURIComponent(
         search
@@ -44,12 +44,10 @@ export default function TabOneScreen() {
         },
       }
     );
-
+    if(response.ok){ 
     const data: SpotifySearchResult = await response.json();
-    const sortedTracks = data.tracks.items;
-    console.log("search:", sortedTracks);
-    setTracks(sortedTracks);
-    return sortedTracks;
+    setTracks(data.tracks.items); 
+    }   
   }, [search]);
 
   return (
