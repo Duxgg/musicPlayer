@@ -24,8 +24,7 @@ const ItemSeparator = () => <View style={styles.separator}></View>;
 const trackTitleFilter = (title: string) => (track: Track) =>
   track.name.toLowerCase().includes(title.toLowerCase());
 export default function TabOneScreen() {
-  const { token } = usePlayerContext();
-  console.log("Access Token:", token);
+  const { token } = usePlayerContext(); 
   const [search, setSearch] = useState("");
 
   const [track, setTracks] = useState<Track[]>();
@@ -47,6 +46,7 @@ export default function TabOneScreen() {
     if(response.ok){ 
     const data: SpotifySearchResult = await response.json();
     setTracks(data.tracks.items); 
+    console.log("Access Token:",data.tracks.items) 
     }   
   }, [search]);
 
@@ -87,6 +87,7 @@ export default function TabOneScreen() {
         ItemSeparatorComponent={ItemSeparator}
         data={track}
         renderItem={({ item }) => <TrackListItem track2={item} />}
+        scrollEnabled ={true}
       />
     </SafeAreaView>
   );

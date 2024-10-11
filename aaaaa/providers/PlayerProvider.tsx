@@ -1,11 +1,11 @@
 import { PropsWithChildren, createContext, useState, useContext, useEffect } from 'react';
  import { Sound } from 'expo-av/build/Audio';
-import { Audio } from 'expo-av';
+import { AVPlaybackStatus, Audio } from 'expo-av';
 import { Track } from '@/types';
  
 
 type PlayerContextType = {
-  track?: Track;
+  track?: any;
   setTrack: (track: Track) => void;
   show?: boolean;
   setShow:(show:boolean)  => void; 
@@ -17,10 +17,14 @@ type PlayerContextType = {
   setisLoaded:(isLoaded:boolean) => void;
   token?:string
   setToken:(token:string)  => void; 
+  onPauseResume:() => void; 
+  pushTrack: (track: Track) => void;
+  popTrack: () => void; 
+  trackStack?:Track[] 
 };
 
 const PlayerContext = createContext<PlayerContextType>({
-  setShow: () => {}, setTrack: () => {}, setSound: () => {},setIsPlaying: () => {}, setisLoaded: () => {}, setToken: () => {},
+  setShow: () => {}, setTrack: () => {}, setSound: () => {},setIsPlaying: () => {}, setisLoaded: () => {}, setToken: () => {}, onPauseResume: () => {}, pushTrack: () => {}, popTrack: () => {},
 });
 
 async function getSpotifyToken() {
@@ -51,13 +55,25 @@ async function getSpotifyToken() {
 }
  
 export default function PlayerProvider({ children }: PropsWithChildren) {
-  const [track, setTrack] = useState<Track>();
+  const [track, setTrack] = useState<any>();
   const [color , setColors] = useState<string>() ; 
   const [sound, setSound] = useState<Audio.Sound>(); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setisLoaded] = useState(false);  
   const [show, setShow] = useState(true);  
   const [token,setToken]  = useState<string>();  
+  const [trackStack, setTrackStack] = useState<Track[]>([]);
+   
+  const pushTrack = (newTrack: Track) => {
+    setTrackStack(prevStack => [ newTrack,...prevStack ]); 
+  };
+  console.log(trackStack)
+  const popTrack = () => { 
+    if(trackStack.length<1) return
+    setTrackStack(prevStack => prevStack.slice(1));
+    const newTopTrack = trackStack[0]; // Get the next top track
+    setTrack(newTopTrack);
+  };  
   useEffect(() => { 
     getSpotifyToken()
     .then(data => {
@@ -68,9 +84,52 @@ export default function PlayerProvider({ children }: PropsWithChildren) {
         console.error('Error fetching token:', err);
     });  
   }, []);
+  const onPLay = async () => {
+    if (sound) await sound.unloadAsync();
+
+    if (track?.preview_url) {
+      const { sound: newSound } = await Audio.Sound.createAsync({
+        uri: track.preview_url,
+      });
+      setSound(newSound);
+      newSound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
+      await newSound.playAsync();
+    }
+  };
+  // const [isPlaying, setIsPlaying] = useState(false);
+  // const [isLoaded, setisLoaded] = useState(false);
+  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
+    setisLoaded(status.isLoaded);
+    if (!status.isLoaded) {
+      return;
+    }
+    setIsPlaying(status.isPlaying);
+    if(status.didJustFinish){ popTrack() }
+  };
+  const onPauseResume = async () => {
+    if (!isLoaded) {
+      return;
+    }
+    if (isPlaying) {
+      await sound?.pauseAsync();
+    } else {
+      await sound?.playAsync();
+    }
+  };
+  useEffect(() => {
+    onPLay();
+  }, [track]);
+  useEffect(() => {
+    return sound
+      ? () => {
+          console.log("Unloading Sound");
+          sound.unloadAsync();
+        }
+      : undefined;
+  }, [sound]); 
   return (
     
-    <PlayerContext.Provider value={{ track, setTrack,show,setShow,sound,setSound,isPlaying,setIsPlaying,isLoaded,setisLoaded,token,setToken }}>
+    <PlayerContext.Provider value={{ track, setTrack,show,setShow,sound,setSound,isPlaying,setIsPlaying,isLoaded,setisLoaded,token,setToken ,onPauseResume,pushTrack, popTrack,trackStack}}>
       {children}
     </PlayerContext.Provider>
   );

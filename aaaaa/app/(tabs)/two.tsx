@@ -10,38 +10,139 @@ import {
   Animated,
   TouchableHighlight,
   TouchableOpacity,
-} from "react-native";
+} from "react-native"; 
 import { Artist, Track } from "@/types";
 import { StyleSheet } from "react-native";
 import TrackListItem from "../../components/trackList";
 import { tracks } from "../../assets/data/tracks";
 import { artists } from "../../assets/data/artist";
 import { FontAwesome } from "@expo/vector-icons";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BlurView } from "expo-blur";
 import Player from "@/components/musicPlayer";
 import PlayerProvider, { usePlayerContext } from "@/providers/PlayerProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
-const ItemSeparator = () => <View style={styles.separator}></View>;
-
-const trackTitleFilter = (title: string) => (track: Track) =>
-  track.name.toLowerCase().includes(title.toLowerCase());
-export default function TabOneScreen() {
-   
-  const {
-    setShow,
-    track,
-    setTrack,
-    isLoaded,
-    isPlaying,
-    setIsPlaying,
-    setisLoaded,
-    sound,
+import { router, useLocalSearchParams } from "expo-router";
+ 
+export default function TabTwoScreen() {
+  const [artist,setArtist] = useState<any>(null)
+  const [topTracks,setTopTracks] = useState<any>() 
+  const [albums,setAlbums] = useState<any>()  
+  const [relate,setRelate] = useState<any>()   
+  const { 
+    setTrack, 
+    token 
   } = usePlayerContext();
   const scrollA = useRef(new Animated.Value(0)).current;
-  
-
+  const   {id}   =   useLocalSearchParams(); 
+   
+  useEffect(() => {
+    async function fetchArtistData() {
+      const artistId = Array.isArray(id) ? id[0] : id; 
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/artists/${encodeURIComponent(
+            artistId 
+          )}`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data:Artist = await response.json();
+          setArtist(data); 
+        }
+      } catch (error) {
+        console.error("Error fetching artist data:", error);
+      }
+    }
+    
+    async function fetchTopTracks() {
+      const artistId = Array.isArray(id) ? id[0] : id;  
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/artists/${encodeURIComponent(
+            artistId
+          )}/top-tracks`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data  = await response.json();
+          setTopTracks(data )  
+        }
+      } catch (error) {
+        console.error("Error fetching artist data:", error);
+      }
+    }
+    
+    async function fetchAlbums() {
+      const artistId = Array.isArray(id) ? id[0] : id;  
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/artists/${encodeURIComponent(
+            artistId
+          )}/albums?include_groups=album`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data  = await response.json();
+          setAlbums(data )   
+        }
+      } catch (error) {
+        console.error("Error fetching artist data:", error);
+      }
+    } 
+    async function fetchRelateArtists() {
+      const artistId = Array.isArray(id) ? id[0] : id;  
+      console.log("Id",artistId )  
+      try {
+        const response = await fetch(
+          `https://api.spotify.com/v1/artists/${encodeURIComponent(
+            artistId
+          )}/related-artists`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        if (response.ok) {
+          const data  = await response.json();
+          setRelate(data )   
+          if( data.artists.length<=5){await fetchRelateArtists()} else
+          console.log("blackaaa",data.artists[0].id )   
+        }
+      } catch (error) {
+        console.error("Error fetching artist data:", error);
+      }
+    }  
+    if (id) {
+      fetchArtistData(); 
+      fetchTopTracks() 
+      fetchAlbums() 
+      fetchRelateArtists() 
+    }
+  }, [id, token]); 
+   
   return (
     <View
       style={[
@@ -53,7 +154,7 @@ export default function TabOneScreen() {
       ]}
     >
       <Animated.Image
-        source={{ uri: artists[0]?.images?.url }}
+        source={{ uri: artist?.images[0].url }}
         style={{
           alignSelf: "center",
           width: "110%",
@@ -70,8 +171,10 @@ export default function TabOneScreen() {
       />
       <LinearGradient
         colors={["transparent", "#000000"]}
+        start={{ x: 0, y: 0 }} // Start at the top
+        end={{ x: 0, y: 0.7 }} 
         style={[
-          {
+          {        
             position: "absolute",
             height: "70%",
           },
@@ -102,7 +205,7 @@ export default function TabOneScreen() {
             color: "white",
           }}
         >
-          {artists[0]?.name}
+          {artist?.name}
         </Text>
         <View
           style={[
@@ -121,7 +224,7 @@ export default function TabOneScreen() {
               color: "grey",
             }}
           >
-            28.3M monthly listener
+             {artist?.followers.total} followers
           </Text>
           <TouchableOpacity style={styles.button}>
             <Text style={styles.text}>Following</Text>
@@ -139,7 +242,7 @@ export default function TabOneScreen() {
             Popular
           </Text>
 
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[0]) }}>
             <View
               style={{
                 marginVertical: 5,
@@ -158,7 +261,7 @@ export default function TabOneScreen() {
                 1
               </Text>
               <Image
-                source={{ uri: artists[0]?.topTrack[0]?.album.images[0].url }}
+                source={{ uri: topTracks?.tracks[0]?.album.images[0].url }}
                 style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
               />
               <View>
@@ -168,14 +271,14 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[0]?.name}
+                  {topTracks?.tracks[0]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{topTracks?.tracks[0]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
 
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[1]) }}>
             <View
               style={{
                 marginVertical: 5,
@@ -194,7 +297,7 @@ export default function TabOneScreen() {
                 2
               </Text>
               <Image
-                source={{ uri: artists[0]?.topTrack[1]?.album.images[0].url }}
+                source={{ uri: topTracks?.tracks[1]?.album.images[0].url }}
                 style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
               />
               <View>
@@ -204,13 +307,13 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[1]?.name}
+                  {topTracks?.tracks[1]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{topTracks?.tracks[1]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[3]) }}>
             <View
               style={{
                 marginVertical: 5,
@@ -229,7 +332,7 @@ export default function TabOneScreen() {
                 3
               </Text>
               <Image
-                source={{ uri: artists[0]?.topTrack[2]?.album.images[0].url }}
+                source={{ uri: topTracks?.tracks[3]?.album.images[0].url }}
                 style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
               />
               <View>
@@ -239,13 +342,13 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[2]?.name}
+                  {topTracks?.tracks[3]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{topTracks?.tracks[2]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[4]) }}>
             <View
               style={{
                 marginVertical: 5,
@@ -264,7 +367,7 @@ export default function TabOneScreen() {
                 4
               </Text>
               <Image
-                source={{ uri: artists[0]?.topTrack[3]?.album.images[0].url }}
+                source={{ uri: topTracks?.tracks[4]?.album.images[0].url }}
                 style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
               />
               <View>
@@ -274,13 +377,13 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[3]?.name}
+                  {topTracks?.tracks[4]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{topTracks?.tracks[3]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
-          <TouchableHighlight>
+          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[5]) }}>
             <View
               style={{
                 marginVertical: 5,
@@ -299,7 +402,7 @@ export default function TabOneScreen() {
                 5
               </Text>
               <Image
-                source={{ uri: artists[0]?.topTrack[4]?.album.images[0].url }}
+                source={{ uri: topTracks?.tracks[5]?.album.images[0].url }}
                 style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
               />
               <View>
@@ -309,9 +412,9 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[4]?.name}
+                  {topTracks?.tracks[5]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{topTracks?.tracks[4]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
@@ -327,7 +430,10 @@ export default function TabOneScreen() {
           >
             Releash
           </Text>
-          <TouchableHighlight>
+          <TouchableHighlight      onPress={() => [ router.navigate({
+                pathname: "../albums",
+                params: { albumsId:  albums?.items[0]?.id as string}  
+              }) ]}>
             <View
               style={{
                 marginVertical: 5,
@@ -338,7 +444,7 @@ export default function TabOneScreen() {
               }}
             >
               <Image
-                source={{ uri: artists[0]?.topTrack[0]?.album.images[0].url }}
+                source={{ uri: albums?.items[0]?.images[0].url }}
                 style={{
                   width: 80,
                   marginLeft: 15,
@@ -353,9 +459,9 @@ export default function TabOneScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {artists[0]?.topTrack[0]?.album.name}
+                  {albums?.items[0]?.name}
                 </Text>
-                <Text style={{ color: "gray" }}>{artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{albums?.items[0]?.artists[0].name}</Text>
               </View>
             </View>
           </TouchableHighlight>
@@ -371,23 +477,131 @@ export default function TabOneScreen() {
           >
             Fans also like
           </Text>
+          {relate?.artists.length >5 ? ( 
           <ScrollView horizontal={true} style={styles.scrollView}>
-            <View style={styles.box}>
-              <Text>Item 1</Text>
+          <TouchableHighlight    onPress={() => [ router.navigate({
+                pathname: "/two",
+                params: { id:  relate?.artists[0].id as string}  
+              }) ]}>
+            <View
+              style={{
+                marginVertical: 5,
+                padding: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Image
+                source={{ uri: relate?.artists[0]?.images[0]?.url }}
+                style={{
+                  width: 80,
+                  marginLeft: 15,
+                  aspectRatio: 1,
+                  marginRight: 10,
+                }}
+              /> 
             </View>
-            <View style={styles.box}>
-              <Text>Item 2</Text>
+          </TouchableHighlight>
+          <TouchableHighlight    onPress={() => [ router.navigate({
+                pathname: "/two",
+                params: { id:  relate?.artists[1].id as string}  
+              }) ]}>
+            <View
+              style={{
+                marginVertical: 5,
+                padding: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Image
+                source={{ uri: relate?.artists[1]?.images[0]?.url }}
+                style={{
+                  width: 80,
+                  marginLeft: 15,
+                  aspectRatio: 1,
+                  marginRight: 10,
+                }}
+              /> 
             </View>
-            <View style={styles.box}>
-              <Text>Item 3</Text>
+          </TouchableHighlight>
+          <TouchableHighlight    onPress={() => [ router.navigate({
+                pathname: "/two",
+                params: { id:  relate?.artists[2].id as string}  
+              }) ]}>
+            <View
+              style={{
+                marginVertical: 5,
+                padding: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Image
+                source={{ uri: relate?.artists[2]?.images[0]?.url }}
+                style={{
+                  width: 80,
+                  marginLeft: 15,
+                  aspectRatio: 1,
+                  marginRight: 10,
+                }}
+              /> 
             </View>
-            <View style={styles.box}>
-              <Text>Item 4</Text>
+          </TouchableHighlight> 
+          <TouchableHighlight    onPress={() => [ router.navigate({
+                pathname: "/two",
+                params: { id:  relate?.artists[3].id as string}  
+              }) ]}>
+            <View
+              style={{
+                marginVertical: 5,
+                padding: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Image
+                source={{ uri: relate?.artists[3]?.images[0]?.url }}
+                style={{
+                  width: 80,
+                  marginLeft: 15,
+                  aspectRatio: 1,
+                  marginRight: 10,
+                }}
+              /> 
             </View>
-            <View style={styles.box}>
-              <Text>Item 5</Text>
+          </TouchableHighlight> 
+          <TouchableHighlight    onPress={() => [ router.navigate({
+                pathname: "/two",
+                params: { id:  relate?.artists[4].id as string}  
+              }) ]}>
+            <View
+              style={{
+                marginVertical: 5,
+                padding: 5,
+                flexDirection: "row",
+                alignItems: "center",
+                width: "100%",
+              }}
+            >
+              <Image
+                source={{ uri: relate?.artists[4]?.images[0]?.url }}
+                style={{
+                  width: 80,
+                  marginLeft: 15,
+                  aspectRatio: 1,
+                  marginRight: 10,
+                }}
+              /> 
             </View>
+          </TouchableHighlight> 
+           
           </ScrollView>
+        ) : null}   
         </View>
       </Animated.ScrollView>
     </View>
@@ -458,3 +672,5 @@ const styles = StyleSheet.create({
     textAlign: "center", // Center text alignment
   },
 });
+
+ 

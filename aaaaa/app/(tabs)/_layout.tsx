@@ -86,7 +86,15 @@ export default function TabLayout() {
            
         }}
       />
-    
+        <Tabs.Screen
+        name="albums"
+        options={{
+          title: 'Tab Albums',
+          tabBarIcon: ({ color }) => <TabBarIcon name="code" color={color} />,  
+          headerShown:false,   
+           
+        }}
+      />
  
     </Tabs>
   );

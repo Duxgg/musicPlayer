@@ -20,12 +20,8 @@ import { Sound } from "expo-av/build/Audio";
 const Player = () => {
   const {
     track,
-    sound,
-    setSound,
-    isLoaded,
-    isPlaying,
-    setIsPlaying,
-    setisLoaded,
+    onPauseResume,
+    isPlaying 
   } = usePlayerContext();
   // const    [ sound, setSound ]= useState<Audio.Sound>();
 
@@ -37,48 +33,7 @@ const Player = () => {
   //   });
 
   // console.log(dominantColor);
-  const onPLay = async () => {
-    if (sound) await sound.unloadAsync();
-
-    if (track?.preview_url) {
-      const { sound: newSound } = await Audio.Sound.createAsync({
-        uri: track.preview_url,
-      });
-      setSound(newSound);
-      newSound.setOnPlaybackStatusUpdate(onPlaybackStatusUpdate);
-      await newSound.playAsync();
-    }
-  };
-  // const [isPlaying, setIsPlaying] = useState(false);
-  // const [isLoaded, setisLoaded] = useState(false);
-  const onPlaybackStatusUpdate = (status: AVPlaybackStatus) => {
-    setisLoaded(status.isLoaded);
-    if (!status.isLoaded) {
-      return;
-    }
-    setIsPlaying(status.isPlaying);
-  };
-  const onPauseResume = async () => {
-    if (!isLoaded) {
-      return;
-    }
-    if (isPlaying) {
-      await sound?.pauseAsync();
-    } else {
-      await sound?.playAsync();
-    }
-  };
-  useEffect(() => {
-    onPLay();
-  }, [track]);
-  useEffect(() => {
-    return sound
-      ? () => {
-          console.log("Unloading Sound");
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
+  
   if (!track) {
     return null;
   }
@@ -101,7 +56,7 @@ const Player = () => {
           {image && <Image source={{ uri: image.url }} style={styles.image} />}
 
           <Pressable
-            onPress={() => [router.navigate("/modal")]}
+            onPress={() => [router.push("/modal")]}
             style={{ flex: 1 }}
           >
             <Text style={styles.title}>{track.name}</Text>

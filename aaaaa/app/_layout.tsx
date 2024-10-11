@@ -60,10 +60,11 @@ function RootLayoutNav() {
   return (
     <ThemeProvider value={  DarkTheme  }>
       <PlayerProvider> 
+        
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ headerShown: false }} />
-        
+        <Stack.Screen name="premier" options={{ headerShown: false }} />
 
       </Stack>
   

@@ -1,4 +1,4 @@
-import { Text, View, StyleSheet, Image, Pressable } from "react-native";
+import { Text, View, StyleSheet, Image, Pressable, FlatList } from "react-native";
 import EditScreenInfo from "@/components/EditScreenInfo";
 // import { getColors } from "react-native-image-colors";
 
@@ -19,20 +19,21 @@ import { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { Sound } from "expo-av/build/Audio";
 import Player from "@/components/musicPlayer";
+import TrackListItem, { TrackListItem2 } from "@/components/trackList";
 
-type TrackListItemProps = {
-  track: Track;
-};
+ 
 
-export default function TabTwoScreen() {
+export default function modal() {
   const {
-    setShow,
+    trackStack,
     track,
     isLoaded,
     isPlaying,
     setIsPlaying,
     setisLoaded,
     sound,
+    pushTrack,
+    popTrack  
   } = usePlayerContext();
   const onPauseResume = async () => {
     if (!isLoaded) {
@@ -51,9 +52,9 @@ export default function TabTwoScreen() {
 
   // const { colors, dominantColor, darkerColor, lighterColor, loading, error } =
   //   useExtractColor(image.url, { maxColors: 10, format: "rgb", maxSize: 1 });
-  const [show, setShow2] = useState(false);
-  const [artist, setArtist] = useState(false);
- 
+  const [show2, setShow2] = useState(false);  
+  const [showQueue, setShowQueue] = useState(false);
+
   return (
     <LinearGradient
       colors={["pink", "#000000"]}
@@ -116,7 +117,7 @@ export default function TabTwoScreen() {
           />
         </Pressable>
 
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={() => popTrack()}>
           <Ionicons
             name={"play-skip-forward-sharp"}
             size={35}
@@ -128,113 +129,179 @@ export default function TabTwoScreen() {
           <Ionicons name={"ellipsis-horizontal"} size={20} color={"white"} />
         </Pressable>
       </View>
-      {show ? (
-        <BlurView
-          experimentalBlurMethod="dimezisBlurView"
-          intensity={70}
-          tint="dark"
-          style={[
-            {
-              flex: 1,
-            },
-            StyleSheet.absoluteFill,
-          ]}
-        >
-          <Image
-            source={{ uri: track.album.images[0]?.url }}
-            style={[
-              styles.image,
-              { width: "50%", marginTop: 15, borderRadius: 0 },
-            ]}
-          />
-          <Text style={[styles.title, { alignSelf: "center" }]}>
-            {track?.name}
-          </Text>
-          <Text style={[styles.subtitle, { alignSelf: "center" }]}>
-            {track?.artists[0].name} • {track?.album.name}
-          </Text>
-
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 15,
-              marginBottom: 30,
-              justifyContent: "flex-start",
-              paddingHorizontal: "5%",
-            }}
-          >
-            <Pressable onPress={() => setShow2(false)}>
-              <Ionicons name={"add-circle-outline"} size={20} color={"white"} />
-            </Pressable>
-            <Text style={[styles.album, { marginLeft: 15 }]}>
-              Add to playlist
-            </Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 15,
-              marginBottom: 30,
-              justifyContent: "flex-start",
-              paddingHorizontal: "5%",
-            }}
-          >
-            <Pressable
-              onPress={() => [setShow2(false), router.navigate("/two") ]}
-            >
-              <Feather name={"disc"} size={18} color={"white"} />
-            </Pressable>
-            <Text style={[styles.album, { marginLeft: 15 }]}>View album</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 15,
-              marginBottom: 30,
-              justifyContent: "flex-start",
-              paddingHorizontal: "5%",
-            }}
-          >
-            <Pressable onPress={() => setShow2(false)}>
-              <Ionicons
-                name={"musical-note-outline"}
-                size={20}
-                color={"white"}
-              />
-            </Pressable>
-            <Text style={[styles.album, { marginLeft: 15 }]}>View artist</Text>
-          </View>
-          <View
-            style={{
-              flexDirection: "row",
-              marginTop: 15,
-              marginBottom: 30,
-              justifyContent: "flex-start",
-              paddingHorizontal: "5%",
-            }}
-          >
-            <Pressable onPress={() => setShow2(false)}>
-              <MaterialIcons name={"queue-music"} size={20} color={"white"} />
-            </Pressable>
-            <Text style={[styles.album, { marginLeft: 15 }]}>Add to queue</Text>
-          </View>
-          <Text
-            style={[
-              styles.subtitle,
-              { alignSelf: "center", marginTop: 100, fontSize: 30 },
-            ]}
-            onPress={() => setShow2(false)}
-          >
-            close
-          </Text>
-        </BlurView>
+      {show2 ? (
+        blurStuff(track,setShow2,pushTrack,setShowQueue)
       ) : null}
-          
+      {showQueue ? (
+       queueList(trackStack,setShowQueue,track) 
+      ) : null}  
        
     </LinearGradient>
   );
 }
 
+function blurStuff(track:any , setShow2:any, pushTrack:any,setShowQueue:any ){
+   return( 
+  <BlurView
+  experimentalBlurMethod="dimezisBlurView"
+  intensity={70}
+  tint="dark"
+  style={[
+    {
+      flex: 1,
+    },
+    StyleSheet.absoluteFill,
+  ]}
+>
+  <Image
+    source={{ uri: track.album.images[0]?.url }}
+    style={[
+      styles.image,
+      { width: "50%", marginTop: 15, borderRadius: 0 },
+    ]}
+  />
+  <Text style={[styles.title, { alignSelf: "center" }]}>
+    {track?.name}
+  </Text>
+  <Text style={[styles.subtitle, { alignSelf: "center" }]}>
+    {track?.artists[0].name} • {track?.album.name}
+  </Text>
+   <View style={{marginLeft:20}}> 
+    <Pressable onPress={() => [setShow2(false),setShowQueue(true) ]}>
+      <Ionicons name={"menu-outline"} size={20} color={"white"} />
+    </Pressable>
+    <Text style={ {color: "white" ,fontWeight: "500",
+                   fontSize: 12 }}>
+      Go to queue
+    </Text> 
+    </View> 
+  <View
+    style={{
+      flexDirection: "row",
+      marginTop: 15,
+      marginBottom: 30,
+      justifyContent: "flex-start",
+      paddingHorizontal: "5%",
+    }}
+  >
+    <Pressable onPress={() => setShow2(false)}>
+      <Ionicons name={"add-circle-outline"} size={20} color={"white"} />
+    </Pressable>
+    <Text style={[styles.album, { marginLeft: 15 }]}>
+      Add to playlist
+    </Text>
+  </View>
+  <View
+    style={{
+      flexDirection: "row",
+      marginTop: 15,
+      marginBottom: 30,
+      justifyContent: "flex-start",
+      paddingHorizontal: "5%",
+    }}
+  >
+    <Pressable
+      onPress={() => [setShow2(false),router.back(), router.push({
+        pathname: "/albums",
+        params: { albumsId:  track?.album.id as string}  
+      }) ]}
+    >
+      <Feather name={"disc"} size={18} color={"white"} />
+    </Pressable>
+    <Text style={[styles.album, { marginLeft: 15 }]}>View album</Text>
+  </View>
+  <View
+    style={{
+      flexDirection: "row",
+      marginTop: 15,
+      marginBottom: 30,
+      justifyContent: "flex-start",
+      paddingHorizontal: "5%",
+    }}
+  >
+     <Pressable
+      onPress={() => [setShow2(false),router.back(), router.push({
+        pathname: "/two",
+        params: { id:  track?.artists[0].id as string}  
+      }) ]}
+    >
+      <Ionicons
+        name={"musical-note-outline"}
+        size={20}
+        color={"white"}
+      />
+    </Pressable>
+    <Text style={[styles.album, { marginLeft: 15 }]}>View artist</Text>
+  </View>
+  <View
+    style={{
+      flexDirection: "row",
+      marginTop: 15,
+      marginBottom: 30,
+      justifyContent: "flex-start",
+      paddingHorizontal: "5%",
+    }}
+  >
+    <Pressable onPress={() => [pushTrack(track),alert('Queue Added!')]}>
+      <MaterialIcons name={"queue-music"} size={20} color={"white"} />
+    </Pressable>
+    <Text style={[styles.album, { marginLeft: 15 }]}>Add to queue</Text>
+  </View>
+  <Text
+    style={[
+      styles.subtitle,
+      { alignSelf: "center", marginTop: 100, fontSize: 30 },
+    ]}
+    onPress={() => setShow2(false)}
+  >
+    close
+  </Text>
+</BlurView>
+   )
+}
+function queueList(trackStack:any,setShowQueue:any,track:any) {
+ 
+  return(  
+    < View  
+    style={[
+      {
+        backgroundColor:"black" ,
+        flex: 1,
+      },
+      StyleSheet.absoluteFill,
+    ]}
+  > 
+     
+        <Pressable onPress={() => [setShowQueue(false)]}
+           style={{
+           
+            marginTop: 15,
+      
+            paddingHorizontal: "5%",
+          }}>
+          <Ionicons name={"chevron-down"} size={20} color={"white"} />
+        </Pressable>
+          
+        <Text style={ {color: "white" ,fontWeight: "500",
+                   fontSize: 16,paddingHorizontal: "5%", }}>
+      Now Playing:               
+    </Text > 
+     <View style={ { paddingHorizontal: "3%", }}> 
+    <TrackListItem     track2={track} />
+    </View>  
+    <Text style={ {color: "white" ,fontWeight: "500",
+                   fontSize: 16,paddingHorizontal: "5%", }}>
+      Next:               
+    </Text>   
+  <FlatList
+  contentContainerStyle={{ paddingBottom: 160 }} 
+  data={trackStack}
+  renderItem={({ item }) => <TrackListItem  track2={item} />}
+  scrollEnabled = {false}  
+/> 
+</ View>
+ )
+}
 const styles = StyleSheet.create({
   container: {
     flex: 1,
