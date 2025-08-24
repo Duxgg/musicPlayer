@@ -4,24 +4,46 @@ import { usePlayerContext } from '@/providers/PlayerProvider';
  
 import { useState } from 'react';
 import Colors from '@/constants/Colors';
+import { router } from 'expo-router';
  
-  
+const goToAlbum = (id:string) => { 
+};
+
+const goToArtist = (id:string) => { 
+  router.push({
+          pathname: "/two",
+          params: { id: id}  
+        }) 
+}; 
+ 
 export default function TrackListItem({ track2 }:any ) {
    const { setTrack, track} = usePlayerContext();
-    var isActive= false 
-    if(track === undefined) isActive= false 
-     else isActive = track2.id===track.id
+ 
  
   return (  
-    <TouchableHighlight onPress={() => {setTrack(track2) }}  >
+    <TouchableHighlight onPress={() => {track2.album
+    ? setTrack(track2)
+    : track2.topSongIds
+    ? goToArtist(track2.id)
+    : goToAlbum(track2.id) }}  >
        <View style={styles.container}> 
       <Image
-        source={{ uri: track2.album.images[0]?.url }}
-        style={styles.image}
+        source={{ uri: track2.album
+    ? track2.album.coverUrl
+    : track2.topSongIds
+    ? track2.coverUrl
+    : track2.coverUrl }}
+   style={
+  track2.album
+    ? styles.imageTrack
+    : track2.topSongIds
+    ? styles.imageAlbum
+    : styles.imageTrack
+}
       />
       <View>
-        <Text style={[styles.title,{color: isActive?'red':'white' ,fontWeight:isActive?700:500}]}>{track2.name}</Text>
-        <Text style={styles.subtitle}>{track2.artists[0].name}</Text>
+        <Text style={[styles.title,{color: track2.id===track?.id?'#1DB954':'white' ,fontWeight: track2.id===track?.id?700:500}]}>{track2.name}</Text>
+        <Text style={styles.subtitle}>{ track2.album?`Song • ${track2.songArtists[0].artist.name}`:track2.topSongIds? `Artist`:`Album • ${track2.albumArtists[0].artist.name}`}</Text>
       </View>
       </View> 
     </TouchableHighlight>
@@ -84,9 +106,15 @@ const styles = StyleSheet.create({
   subtitle: {
     color: 'gray',
   },
-  image: {
+  imageTrack: {
     width: 45,
     aspectRatio: 1, 
     marginRight: 10,
   },
+  imageAlbum: {
+    width: 45,
+    aspectRatio: 1, 
+    marginRight: 10,
+    borderRadius:90
+  }, 
 });

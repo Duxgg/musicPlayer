@@ -1,0 +1,7 @@
+[{
+  "_id": {
+    "$oid": "68808281d42028f95d882baf"
+  },
+  "songId": "uuid-of-track",
+  "userId": "uuid-of-artist"
+}]

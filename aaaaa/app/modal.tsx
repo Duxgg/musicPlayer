@@ -1,14 +1,9 @@
 import { Text, View, StyleSheet, Image, Pressable, FlatList } from "react-native";
-import EditScreenInfo from "@/components/EditScreenInfo";
-// import { getColors } from "react-native-image-colors";
-
-import { Track } from "@/types";
+ 
 import { usePlayerContext } from "@/providers/PlayerProvider";
 // import { useExtractColor } from "react-extract-colors";
-import {
-  Entypo,
-  Feather,
-  FontAwesome5,
+import { 
+  Feather, 
   FontAwesome6,
   Ionicons,
   MaterialIcons,
@@ -16,10 +11,10 @@ import {
 import { Link, router } from "expo-router";
 import { BlurView } from "expo-blur";
 import { useState } from "react";
-import { LinearGradient } from "expo-linear-gradient";
-import { Sound } from "expo-av/build/Audio";
-import Player from "@/components/musicPlayer";
-import TrackListItem, { TrackListItem2 } from "@/components/trackList";
+import { LinearGradient } from "expo-linear-gradient"; 
+import TrackListItem from "@/components/trackList";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { Track } from "@/types";
 
  
 
@@ -28,9 +23,7 @@ export default function modal() {
     trackStack,
     track,
     isLoaded,
-    isPlaying,
-    setIsPlaying,
-    setisLoaded,
+    isPlaying, 
     sound,
     pushTrack,
     popTrack  
@@ -47,9 +40,7 @@ export default function modal() {
   };
   if (!track) {
     return null;
-  }
-  const image = track.album.images?.[0];
-
+  }  
   // const { colors, dominantColor, darkerColor, lighterColor, loading, error } =
   //   useExtractColor(image.url, { maxColors: 10, format: "rgb", maxSize: 1 });
   const [show2, setShow2] = useState(false);  
@@ -65,6 +56,7 @@ export default function modal() {
         StyleSheet.absoluteFill,
       ]}
     >
+      <SafeAreaView> 
       <View
         style={{
           flexDirection: "row",
@@ -84,12 +76,12 @@ export default function modal() {
         </Pressable>
       </View>
       <Image
-        source={{ uri: track.album.images[0]?.url }}
+        source={{ uri: track.album.coverUrl }}
         style={styles.image}
       />
       <View style={{}}>
         <Text style={styles.title}>{track.name}</Text>
-        <Text style={styles.subtitle}>{track.artists[0].name}</Text>
+        <Text style={styles.subtitle}>{track.songArtists[0].artist.name}</Text>
       </View>
       <View
         style={{
@@ -135,26 +127,28 @@ export default function modal() {
       {showQueue ? (
        queueList(trackStack,setShowQueue,track) 
       ) : null}  
-       
+       </SafeAreaView> 
     </LinearGradient>
   );
 }
 
-function blurStuff(track:any , setShow2:any, pushTrack:any,setShowQueue:any ){
+function blurStuff(track:Track , setShow2:any, pushTrack:any,setShowQueue:any ){
    return( 
+ 
   <BlurView
   experimentalBlurMethod="dimezisBlurView"
   intensity={70}
   tint="dark"
   style={[
     {
-      flex: 1,
+          height: "1925%",
     },
     StyleSheet.absoluteFill,
   ]}
 >
+  <SafeAreaView>    
   <Image
-    source={{ uri: track.album.images[0]?.url }}
+    source={{ uri: track.album.coverUrl }}
     style={[
       styles.image,
       { width: "50%", marginTop: 15, borderRadius: 0 },
@@ -164,7 +158,7 @@ function blurStuff(track:any , setShow2:any, pushTrack:any,setShowQueue:any ){
     {track?.name}
   </Text>
   <Text style={[styles.subtitle, { alignSelf: "center" }]}>
-    {track?.artists[0].name} • {track?.album.name}
+    {track?.songArtists[0].artist.name} • {track?.album.name}
   </Text>
    <View style={{marginLeft:20}}> 
     <Pressable onPress={() => [setShow2(false),setShowQueue(true) ]}>
@@ -222,7 +216,7 @@ function blurStuff(track:any , setShow2:any, pushTrack:any,setShowQueue:any ){
      <Pressable
       onPress={() => [setShow2(false),router.back(), router.push({
         pathname: "/two",
-        params: { id:  track?.artists[0].id as string}  
+        params: { id:  track.songArtists[0].artist.id as string}  
       }) ]}
     >
       <Ionicons
@@ -256,7 +250,9 @@ function blurStuff(track:any , setShow2:any, pushTrack:any,setShowQueue:any ){
   >
     close
   </Text>
+   </SafeAreaView>  
 </BlurView>
+   
    )
 }
 function queueList(trackStack:any,setShowQueue:any,track:any) {

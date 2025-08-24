@@ -1,0 +1,11 @@
+[{
+  "_id": "uuid-of-artist",
+  "name": "Nirvana",
+  "imageIds": [
+    "uuid-image-3"
+  ],
+  "topSongIds": [
+    "Array 1",
+    "Array "
+  ]
+}]

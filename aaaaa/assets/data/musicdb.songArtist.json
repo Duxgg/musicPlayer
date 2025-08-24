@@ -1,0 +1,14 @@
+[{
+  "_id": {
+    "$oid": "687d0e672bd71c6fd7146626"
+  },
+  "songId": "uuid-of-track",
+  "artistId": "uuid-of-artist"
+},
+{
+  "_id": {
+    "$oid": "687e158232edd4a644aac63e"
+  },
+  "songId": "nlkjlk",
+  "artistId": "uuid-of-artist"
+}]

@@ -1,34 +1,21 @@
-import {
-    ActivityIndicator,
+import { 
     FlatList,
     SafeAreaView,
-    Text,
-    TextInput,
-    View,
-    Image,
-    ScrollView,
-    Animated,
-    TouchableHighlight,
-    TouchableOpacity,
+    Text, 
+    View, 
+    Animated, 
     Dimensions,
-  } from "react-native"; 
-  import { Artist, Track } from "@/types";
+  } from "react-native";  
   import { StyleSheet } from "react-native";
-  import TrackListItem, { TrackListItem2 } from "../../components/trackList";
-  import { tracks } from "../../assets/data/tracks";
-  import { artists } from "../../assets/data/artist";
-  import { FontAwesome } from "@expo/vector-icons";
-  import { useEffect, useMemo, useRef, useState } from "react";
-  import { BlurView } from "expo-blur";
-  import Player from "@/components/musicPlayer";
-  import PlayerProvider, { usePlayerContext } from "@/providers/PlayerProvider";
+  import  { TrackListItem2 } from "../../components/trackList"; 
+  import { useEffect, useMemo, useRef, useState } from "react"; 
+  import  { usePlayerContext } from "@/providers/PlayerProvider";
   import { LinearGradient } from "expo-linear-gradient";
   import React from "react";
   import { router, useLocalSearchParams } from "expo-router";
    
   export default function TabTwoScreen() {
-    const { width, height } = Dimensions.get('window'); 
-    const [artist,setArtist] = useState<any>(null) 
+    const { height } = Dimensions.get('window');  
     const [albums,setAlbums] = useState<any>()   
     const { 
       setTrack, 

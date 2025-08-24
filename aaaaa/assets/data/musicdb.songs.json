@@ -1,0 +1,11 @@
+[{
+  "_id": "uuid-of-track",
+  "name": "Smells Like Teen Spirit",
+  "previewUrl": "http://localhost:3000/previews/teen-spirit.mp3",
+  "albumId": "uuid-of-album"
+},
+{
+  "_id": "nlkjlk",
+  "name": "Come as you are",
+  "albumId": "uuid-of-album"
+}]

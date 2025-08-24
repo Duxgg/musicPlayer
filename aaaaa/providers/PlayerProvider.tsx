@@ -5,7 +5,7 @@ import { Track } from '@/types';
  
 
 type PlayerContextType = {
-  track?: any;
+  track?: Track;
   setTrack: (track: Track) => void;
   show?: boolean;
   setShow:(show:boolean)  => void; 
@@ -20,11 +20,14 @@ type PlayerContextType = {
   onPauseResume:() => void; 
   pushTrack: (track: Track) => void;
   popTrack: () => void; 
-  trackStack?:Track[] 
+  trackStack?:Track[]; 
+  color?:string;
+  setColor: (color:string)=> void;    
+ 
 };
 
 const PlayerContext = createContext<PlayerContextType>({
-  setShow: () => {}, setTrack: () => {}, setSound: () => {},setIsPlaying: () => {}, setisLoaded: () => {}, setToken: () => {}, onPauseResume: () => {}, pushTrack: () => {}, popTrack: () => {},
+  setShow: () => {}, setTrack: () => {}, setSound: () => {},setIsPlaying: () => {}, setisLoaded: () => {}, setToken: () => {}, onPauseResume: () => {}, pushTrack: () => {}, popTrack: () => {},setColor:() => {}
 });
 
 async function getSpotifyToken() {
@@ -56,7 +59,7 @@ async function getSpotifyToken() {
  
 export default function PlayerProvider({ children }: PropsWithChildren) {
   const [track, setTrack] = useState<any>();
-  const [color , setColors] = useState<string>() ; 
+  const [color , setColor] = useState<string>() ; 
   const [sound, setSound] = useState<Audio.Sound>(); 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setisLoaded] = useState(false);  
@@ -129,7 +132,7 @@ export default function PlayerProvider({ children }: PropsWithChildren) {
   }, [sound]); 
   return (
     
-    <PlayerContext.Provider value={{ track, setTrack,show,setShow,sound,setSound,isPlaying,setIsPlaying,isLoaded,setisLoaded,token,setToken ,onPauseResume,pushTrack, popTrack,trackStack}}>
+    <PlayerContext.Provider value={{ color , setColor,track, setTrack,show,setShow,sound,setSound,isPlaying,setIsPlaying,isLoaded,setisLoaded,token,setToken ,onPauseResume,pushTrack, popTrack,trackStack}}>
       {children}
     </PlayerContext.Provider>
   );

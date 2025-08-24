@@ -14,15 +14,18 @@
     },
     "ios": {
       "supportsTablet": true,
-      "infoPlist":{
-        "UIBackgroundModes": ["audio"]
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "audio"
+        ]
       }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.dug2606.aaaaa"
     },
     "web": {
       "bundler": "metro",

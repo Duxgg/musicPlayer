@@ -8,8 +8,9 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/components/useColorScheme';
 import PlayerProvider from '@/providers/PlayerProvider';
-import Player from '@/components/musicPlayer';
- 
+import { useState } from "react";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -26,9 +27,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
  
-  const trackPLayerOnLoa =useCallback (()=>{
-     SplashScreen.hideAsync() 
-  },[])
+   
   
  
   const [loaded, error] = useFonts({
@@ -56,11 +55,12 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
-
+  const [queryClient] = useState(() => new QueryClient());
   return (
     <ThemeProvider value={  DarkTheme  }>
       <PlayerProvider> 
-        
+      <QueryClientProvider client={queryClient}>
+
       <Stack>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="modal" options={{ headerShown: false }} />
@@ -68,7 +68,7 @@ function RootLayoutNav() {
 
       </Stack>
   
-        
+      </QueryClientProvider>  
       </PlayerProvider>  
     </ThemeProvider>
   );

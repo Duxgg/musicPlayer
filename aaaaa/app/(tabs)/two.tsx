@@ -1,148 +1,37 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  SafeAreaView,
-  Text,
-  TextInput,
+import { 
+  Text, 
   View,
   Image,
   ScrollView,
   Animated,
   TouchableHighlight,
   TouchableOpacity,
-} from "react-native"; 
-import { Artist, Track } from "@/types";
-import { StyleSheet } from "react-native";
-import TrackListItem from "../../components/trackList";
-import { tracks } from "../../assets/data/tracks";
-import { artists } from "../../assets/data/artist";
-import { FontAwesome } from "@expo/vector-icons";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { BlurView } from "expo-blur";
-import Player from "@/components/musicPlayer";
-import PlayerProvider, { usePlayerContext } from "@/providers/PlayerProvider";
+} from "react-native";  
+import { StyleSheet } from "react-native"; 
+import { useEffect, useMemo, useRef, useState } from "react"; 
+import { usePlayerContext } from "@/providers/PlayerProvider";
 import { LinearGradient } from "expo-linear-gradient";
 import React from "react";
 import { router, useLocalSearchParams } from "expo-router";
- 
-export default function TabTwoScreen() {
-  const [artist,setArtist] = useState<any>(null)
-  const [topTracks,setTopTracks] = useState<any>() 
-  const [albums,setAlbums] = useState<any>()  
-  const [relate,setRelate] = useState<any>()   
+import {
+  useArtistData,
+  useTopTracks,
+  useAlbums,
+  useRelatedArtists
+} from "@/app/lib/queries/useArtistQueries" 
+export default function TabTwoScreen() { 
   const { 
     setTrack, 
-    token 
+    token,
+    track  
   } = usePlayerContext();
   const scrollA = useRef(new Animated.Value(0)).current;
   const   {id}   =   useLocalSearchParams(); 
-   
-  useEffect(() => {
-    async function fetchArtistData() {
-      const artistId = Array.isArray(id) ? id[0] : id; 
-      try {
-        const response = await fetch(
-          `https://api.spotify.com/v1/artists/${encodeURIComponent(
-            artistId 
-          )}`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.ok) {
-          const data:Artist = await response.json();
-          setArtist(data); 
-        }
-      } catch (error) {
-        console.error("Error fetching artist data:", error);
-      }
-    }
-    
-    async function fetchTopTracks() {
-      const artistId = Array.isArray(id) ? id[0] : id;  
-      try {
-        const response = await fetch(
-          `https://api.spotify.com/v1/artists/${encodeURIComponent(
-            artistId
-          )}/top-tracks`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.ok) {
-          const data  = await response.json();
-          setTopTracks(data )  
-        }
-      } catch (error) {
-        console.error("Error fetching artist data:", error);
-      }
-    }
-    
-    async function fetchAlbums() {
-      const artistId = Array.isArray(id) ? id[0] : id;  
-      try {
-        const response = await fetch(
-          `https://api.spotify.com/v1/artists/${encodeURIComponent(
-            artistId
-          )}/albums?include_groups=album`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.ok) {
-          const data  = await response.json();
-          setAlbums(data )   
-        }
-      } catch (error) {
-        console.error("Error fetching artist data:", error);
-      }
-    } 
-    async function fetchRelateArtists() {
-      const artistId = Array.isArray(id) ? id[0] : id;  
-      console.log("Id",artistId )  
-      try {
-        const response = await fetch(
-          `https://api.spotify.com/v1/artists/${encodeURIComponent(
-            artistId
-          )}/related-artists`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        if (response.ok) {
-          const data  = await response.json();
-          setRelate(data )   
-          if( data.artists.length<=5){await fetchRelateArtists()} else
-          console.log("blackaaa",data.artists[0].id )   
-        }
-      } catch (error) {
-        console.error("Error fetching artist data:", error);
-      }
-    }  
-    if (id) {
-      fetchArtistData(); 
-      fetchTopTracks() 
-      fetchAlbums() 
-      fetchRelateArtists() 
-    }
-  }, [id, token]); 
-   
+  
+  const { data: artist } = useArtistData(id, token);
+  const { data: topTracks } = useTopTracks(id, token);
+  const { data: albums } = useAlbums(id, token);
+  const { data: relate } = useRelatedArtists(id, token);  
   return (
     <View
       style={[
@@ -154,7 +43,7 @@ export default function TabTwoScreen() {
       ]}
     >
       <Animated.Image
-        source={{ uri: artist?.images[0].url }}
+        source={{ uri: artist?.coverUrl}}
         style={{
           alignSelf: "center",
           width: "110%",
@@ -224,7 +113,7 @@ export default function TabTwoScreen() {
               color: "grey",
             }}
           >
-             {artist?.followers.total} followers
+             { } followers
           </Text>
           <TouchableOpacity style={styles.button}>
             <Text style={styles.text}>Following</Text>
@@ -242,182 +131,50 @@ export default function TabTwoScreen() {
             Popular
           </Text>
 
-          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[0]) }}>
-            <View
-              style={{
-                marginVertical: 5,
-                padding: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text
-                style={[
-                  { marginLeft: 15, marginRight: 10, fontSize: 16 },
-                  { color: "white", fontWeight: 500 },
-                ]}
-              >
-                1
-              </Text>
-              <Image
-                source={{ uri: topTracks?.tracks[0]?.album.images[0].url }}
-                style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    { color: "white", fontWeight: "500", fontSize: 16 },
-                    { color: "white", fontWeight: 500 },
-                  ]}
-                >
-                  {topTracks?.tracks[0]?.name}
-                </Text>
-                <Text style={{ color: "gray" }}>{topTracks?.tracks[0]?.artists[0].name}</Text>
-              </View>
-            </View>
-          </TouchableHighlight>
+          {topTracks?.slice(0, 5).map((tracks:any, index:any) => (
+  <TouchableHighlight key={tracks.id} onPress={() => setTrack(tracks)}>
+    <View
+      style={{
+        marginVertical: 5,
+        padding: 5,
+        flexDirection: "row",
+        alignItems: "center",
+        width: "100%",
+      }}
+    >
+      <Text
+        style={{
+          marginLeft: 15,
+          marginRight: 10,
+          fontSize: 16,
+          color: "white",
+          fontWeight: "500",
+        }}
+      >
+        {index + 1}
+      </Text>
+      <Image
+        source={{ uri: tracks?.album.coverUrl }}
+        style={{ width: 45, aspectRatio: 1, marginRight: 10 } }
+      />
+      <View>
+        <Text
+          style={[{
+            color: "white",
+            fontWeight: "500",
+            fontSize: 16,
+          },  track?.id === tracks.id && { color: "#1DB954" }]}
+        >
+          {tracks.name}
+        </Text>
+        <Text style={{ color: "gray" }}>
+          {tracks.songArtists?.[0]?.artist.name ?? "Unknown Artist"}
+        </Text>
+      </View>
+    </View>
+  </TouchableHighlight>
+))}
 
-          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[1]) }}>
-            <View
-              style={{
-                marginVertical: 5,
-                padding: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text
-                style={[
-                  { marginLeft: 15, marginRight: 10, fontSize: 16 },
-                  { color: "white", fontWeight: 500 },
-                ]}
-              >
-                2
-              </Text>
-              <Image
-                source={{ uri: topTracks?.tracks[1]?.album.images[0].url }}
-                style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    { color: "white", fontWeight: "500", fontSize: 16 },
-                    { color: "white", fontWeight: 500 },
-                  ]}
-                >
-                  {topTracks?.tracks[1]?.name}
-                </Text>
-                <Text style={{ color: "gray" }}>{topTracks?.tracks[1]?.artists[0].name}</Text>
-              </View>
-            </View>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[3]) }}>
-            <View
-              style={{
-                marginVertical: 5,
-                padding: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text
-                style={[
-                  { marginLeft: 15, marginRight: 10, fontSize: 16 },
-                  { color: "white", fontWeight: 500 },
-                ]}
-              >
-                3
-              </Text>
-              <Image
-                source={{ uri: topTracks?.tracks[3]?.album.images[0].url }}
-                style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    { color: "white", fontWeight: "500", fontSize: 16 },
-                    { color: "white", fontWeight: 500 },
-                  ]}
-                >
-                  {topTracks?.tracks[3]?.name}
-                </Text>
-                <Text style={{ color: "gray" }}>{topTracks?.tracks[2]?.artists[0].name}</Text>
-              </View>
-            </View>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[4]) }}>
-            <View
-              style={{
-                marginVertical: 5,
-                padding: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text
-                style={[
-                  { marginLeft: 15, marginRight: 10, fontSize: 16 },
-                  { color: "white", fontWeight: 500 },
-                ]}
-              >
-                4
-              </Text>
-              <Image
-                source={{ uri: topTracks?.tracks[4]?.album.images[0].url }}
-                style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    { color: "white", fontWeight: "500", fontSize: 16 },
-                    { color: "white", fontWeight: 500 },
-                  ]}
-                >
-                  {topTracks?.tracks[4]?.name}
-                </Text>
-                <Text style={{ color: "gray" }}>{topTracks?.tracks[3]?.artists[0].name}</Text>
-              </View>
-            </View>
-          </TouchableHighlight>
-          <TouchableHighlight onPress={() => {setTrack(topTracks?.tracks[5]) }}>
-            <View
-              style={{
-                marginVertical: 5,
-                padding: 5,
-                flexDirection: "row",
-                alignItems: "center",
-                width: "100%",
-              }}
-            >
-              <Text
-                style={[
-                  { marginLeft: 15, marginRight: 10, fontSize: 16 },
-                  { color: "white", fontWeight: 500 },
-                ]}
-              >
-                5
-              </Text>
-              <Image
-                source={{ uri: topTracks?.tracks[5]?.album.images[0].url }}
-                style={{ width: 45, aspectRatio: 1, marginRight: 10 }}
-              />
-              <View>
-                <Text
-                  style={[
-                    { color: "white", fontWeight: "500", fontSize: 16 },
-                    { color: "white", fontWeight: 500 },
-                  ]}
-                >
-                  {topTracks?.tracks[5]?.name}
-                </Text>
-                <Text style={{ color: "gray" }}>{topTracks?.tracks[4]?.artists[0].name}</Text>
-              </View>
-            </View>
-          </TouchableHighlight>
           <Text
             style={{
               fontWeight: "bold",
@@ -432,7 +189,7 @@ export default function TabTwoScreen() {
           </Text>
           <TouchableHighlight      onPress={() => [ router.navigate({
                 pathname: "../albums",
-                params: { albumsId:  albums?.items[0]?.id as string}  
+                params: { albumsId:  artist?.albumArtists?.[0]?.album?.id as string}  
               }) ]}>
             <View
               style={{
@@ -444,7 +201,7 @@ export default function TabTwoScreen() {
               }}
             >
               <Image
-                source={{ uri: albums?.items[0]?.images[0].url }}
+                source={{ uri: artist?.albumArtists?.[0]?.album?.coverUrl   }}
                 style={{
                   width: 80,
                   marginLeft: 15,
@@ -459,9 +216,13 @@ export default function TabTwoScreen() {
                     { color: "white", fontWeight: 500 },
                   ]}
                 >
-                  {albums?.items[0]?.name}
+                  {artist?.albumArtists
+                    ?.slice(0, 5)
+                    ?.map((artistEntry: any) => artistEntry.album?.name)
+                    ?.filter(Boolean)
+                    ?.join(", ")}
                 </Text>
-                <Text style={{ color: "gray" }}>{albums?.items[0]?.artists[0].name}</Text>
+                <Text style={{ color: "gray" }}>{artist?.name}</Text>
               </View>
             </View>
           </TouchableHighlight>

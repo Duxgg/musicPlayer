@@ -6,11 +6,10 @@ import {
   Pressable,
   Dimensions,
 } from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { tracks } from "../assets/data/tracks";
+import { Ionicons } from "@expo/vector-icons"; 
 
 import { usePlayerContext } from "@/providers/PlayerProvider";
-import { AVPlaybackStatus, Audio } from "expo-av";
+import ImageColors from 'react-native-image-colors'; 
 import { useEffect, useState } from "react";
 import { Link, router } from "expo-router";
 import { Sound } from "expo-av/build/Audio";
@@ -21,30 +20,46 @@ const Player = () => {
   const {
     track,
     onPauseResume,
-    isPlaying 
+    isPlaying,
+    setColor,
+    color   
   } = usePlayerContext();
-  // const    [ sound, setSound ]= useState<Audio.Sound>();
+      
+  useEffect(() => {
+    const imageUrl = track?.album.coverUrl ?? 'https://static.thenounproject.com/png/1269202-200.png';
+ 
+    const fetchColors = async () => {
+      const result = await ImageColors.getColors(imageUrl, {
+        fallback: '#000000',
+        cache: true, 
+      });
+       
+      if (result.platform === 'android') {
+        setColor(result.darkVibrant || '#000');
+      } else if (result.platform === 'ios') {
+        setColor(result.background || '#000');
+      } else if (result.platform === 'web') {
+        setColor(result.darkVibrant || '#000'); // or result.vibrant / lightVibrant if supported
+      } else {
+        setColor('#000'); // fallback for undefined
+      } 
 
-  // const { colors, dominantColor, darkerColor, lighterColor, loading, error } =
-  //   useExtractColor(track?.album.images[0].url, {
-  //     maxColors: 10,
-  //     format: "rgb",
-  //     maxSize: 1,
-  //   });
-
-  // console.log(dominantColor);
-  
+      console.log
+    };
+ 
+    fetchColors();
+  }, [track]); 
   if (!track) {
     return null;
   }
 
-  const image = track.album.images?.[0];
+  const image = track.album.coverUrl;
   return (
     <Pressable style={styles.container}>
       {({ pressed }) => (
         <View
           style={{
-            backgroundColor: "pink",
+            backgroundColor: color,
             flex: 1,
             flexDirection: "row",
             alignItems: "center",
@@ -53,7 +68,7 @@ const Player = () => {
             paddingRight: 15,
           }}
         >
-          {image && <Image source={{ uri: image.url }} style={styles.image} />}
+          {image && <Image source={{ uri: image  }} style={styles.image} />}
 
           <Pressable
             onPress={() => [router.push("/modal")]}
@@ -61,8 +76,7 @@ const Player = () => {
           >
             <Text style={styles.title}>{track.name}</Text>
             <Text style={styles.subtitle}>
-              {track.artists[0]?.name} {track.artists[1]?.name}{" "}
-              {track.artists[2]?.name} {track.artists[3]?.name}
+              {track.songArtists[0]?.artist.name}  
             </Text>
           </Pressable>
 
@@ -86,10 +100,10 @@ const Player = () => {
 const styles = StyleSheet.create({
   container: {
     position: "absolute",
-    top: -120,
+    top: -155,
     width: "100%",
-    height: 75,
-    padding: 8,
+    height: 70,
+    paddingHorizontal: 8,
   },
   player: {
     backgroundColor: "#286660",

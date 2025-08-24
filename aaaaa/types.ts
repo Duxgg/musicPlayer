@@ -3,18 +3,33 @@ export type Track = {
   name: string;
   preview_url?: string | null;
   album: Album;
-  artists: Artist[];
+  songArtists: songArtists[];
 };
+export type songArtists = {
+  id: string;
+  songId: string; 
+  artistId: string;
+  artist: Artist ;
+}; 
+export type albumArtists = {
+  id: string;
+  albumId: string; 
+  artistId: string;
+  artist: Artist ;
+  album: Album;
+};  
 export type Album = {
   id: string;
   name: string;
-  images: Image[];
+  coverUrl:string;
 };
 export type Artist = {
   id: string;
   name: string;
-  images?: Image ;
+  coverUrl?: string ;
   topTrack?: Track[]; 
+  songArtists?: songArtists[];  
+  albumArtists?: albumArtists[];
 };
 
 export type Image = {
